@@ -1,2 +1,5 @@
 /saves/*
 server.py
+node_modules
+package-lock.json
+style.css

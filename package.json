@@ -5,5 +5,8 @@
   "type": "module",
   "main": "jsonify_saves.js",
   "author": "Grabz",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.1.6"
+  }
 }
