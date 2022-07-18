@@ -1,0 +1,9 @@
+{
+  "name": "trimps-save-archive",
+  "version": "1.0.0",
+  "description": "An interactive archive of Trimps saves from contributors in the Trimps community",
+  "type": "module",
+  "main": "jsonify_saves.js",
+  "author": "Grabz",
+  "license": "MIT"
+}

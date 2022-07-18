@@ -1,0 +1,63 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./lib/lz-string.js"></script>
+
+    <template id="templateSave">
+        <div data-id="root" class="flex flex-col w-full bg-blue-100 hover:bg-blue-200 p-1 m-1">
+            <div class="flex flex-row grow">
+                <div class="flex flex-col grow shrink basis-3/12">
+                    <div class="grow-0 text-left">From: <span class="font-bold" data-id="user"></span></div>
+                    <div class="grow-0"><span class="" data-id="dateModified"></span></div>
+                    <div class="grow-0">V <span class="" data-id="version"></span></div>
+                </div>
+                <div class="flex flex-col grow shrink basis-3/12">
+                    <div class="grow-0">Total Helium: <span class="font-bold" data-id="totalHelium"></span></div>
+                    <div class="grow-0">Highest Zone: <span class="font-bold" data-id="highestZone"></span></div>
+                    <div class="grow-0">Total Portals: <span class="font-bold" data-id="totalPortals"></span></div>
+                </div>
+                <div class="flex flex-col grow shrink basis-3/12" data-id="U2Container">
+                    <div class="grow-0">Total Radon: <span class="font-bold" data-id="totalRadon"></span></div>
+                    <div class="grow-0">Highest Zone: <span class="font-bold" data-id="highestZoneU2"></span></div>
+                    <div class="grow-0">Total Portals: <span class="font-bold" data-id="totalPortalsU2"></span></div>
+                </div>
+                <div class="flex flex-col grow shrink basis-3/12">
+                    <div class="grow-0 text-right"><span class="" data-id="name"></span></div>
+                    <div class="grow p-1 m-1 text-center">
+                        <button data-id="copyToClipboard" class="box-content bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 active:bg-blue-600 active:border-blue-800">Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</head>
+
+<body class="absolute m-0 p-0 inset-0">
+    <div class="md:flex inset-0 relative w-full h-full">
+        <div class="w-full h-auto md:w-3/12 bg-gray-300 p-2 m-2">
+            Filters
+            <!--<div>
+                <label><input type="checkbox" id="checkboxFilterTotalHelium"> Filter by Total Helium</label>
+                <input id="inputFilterTotalHelium" placeholder="">
+            </div>-->
+            <div class="mt-2 mb-2">
+                <label><input type="checkbox" id="checkboxFilterHighestZone"> Filter by Highest Zone</label>
+                <input id="inputFilterHighestZone" placeholder="Highest Zone" type="number" min="1" max="999">
+            </div>
+            <!--<div>
+                <label><input type="checkbox" id="checkboxFilterTotalRadon"> Filter by Total Radon</label>
+            </div>-->
+            <div class="mt-2 mb-2">
+                <label><input type="checkbox" id="checkboxFilterHighestU2Zone"> Filter by Highest U2 Zone</label>
+                <input id="inputFilterHighestU2Zone" placeholder="Highest U2 Zone" type="number" min="1" max="999">
+            </div>
+            <button id="filterButton" class="box-content bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 active:bg-blue-600 active:border-blue-800">Filter</button>
+        </div>
+        <div id="savesContainer" class="w-full h-auto md:w-9/12 bg-gray-100 p-2 m-2 ml-0 overflow-y-scroll"></div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
