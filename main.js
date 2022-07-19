@@ -1,11 +1,6 @@
-export const SAVE_NAMES = ['DrNye', 'Grabz', 'Quia', 'RMEfan', 'Snuthier']
-//export const SAVE_NAMES = ['Grabz', 'Snuthier']
+export const SAVE_NAMES = ['DrNye', 'Grabz', 'Neo', 'Quia', 'RMEfan', 'Snuthier']
 
-/** @type {any} */
-// @ts-ignore
-const LZ = LZString;
-
-/** @typedef {{base64: string, name: string, game: { global: { version: number, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number, lastOnline: number, spiresCompleted: number } }, user: string}} Save */
+/** @typedef {{base64: string, name: string, game: { global: { version: string, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number, lastOnline: number, spiresCompleted: number } }, user: string}} Save */
 /** @typedef {import("./jsonify_saves").JSONSaves} JSONSaves} */
 /** 
  * @typedef {object} Elems 
@@ -20,8 +15,6 @@ const LZ = LZString;
  * @property {HTMLInputElement} inputFilterTotalRadon
  * @property {HTMLInputElement} inputFilterHighestU2Zone
  * @property {HTMLButtonElement} filterButton
- * @property {HTMLDivElement} loadingText
- * @property {HTMLDivElement} loadingOverlay
  * @property {HTMLDivElement} userFilterContainer
 */
 
@@ -229,84 +222,40 @@ function refreshList() {
 /**
  * @returns {Promise<Save[]>}
  */
-function loadSaves() {
-    return new Promise((resolve, reject) => {
-        loadSavesParse(0, 0, null, [], resolve, reject);
-    })
-}
-
-/**
- * 
- * @param {number} nameIndex 
- * @param {number} saveIndex 
- * @param {JSONSaves|null} jsonArr
- * @param {Save[]} saveArr 
- * @param {(arg: Save[]) => void} resolve
- * @param {(err: string) => void} reject
- */
-async function loadSavesParse(nameIndex, saveIndex, jsonArr, saveArr, resolve, reject) {
-    const name = SAVE_NAMES[nameIndex];
-
-    if(jsonArr == null) {
-        jsonArr = await (await fetch(`output/${name}.json`)).json()
+async function loadSaves() {
+    /** @type {Save[]} */
+    const saveArr = [];
+    for(const name of SAVE_NAMES) {
+        /** @type {JSONSaves|null} */
+        const jsonArr = await (await fetch(`output/${name}.json`)).json()
         if(jsonArr == null) {
-            reject(`Failed to fetch from ${name}.json`);
-            return;
-        }
-    }
-
-    elems.loadingText.innerHTML = `Loading Saves<br>${name}<br>${saveIndex} / ${jsonArr?.length}`;
-
-    const l = Math.min(saveIndex + 21, jsonArr.length);
-    for(let i = saveIndex; i < l; i++) {
-        const save = jsonArr[i];
-        const decompressed = LZ.decompressFromBase64(save.raw);
-        if(decompressed == null) {
-            console.warn(`Failed to decompress save ${save.name} from ${name}`);
+            console.error(`Failed to fetch from ${name}.json`);
             continue;
         }
-        try {
-            const game = JSON.parse(decompressed);
+
+        for(const save of jsonArr) {
             saveArr.push({
                 user: name,
-                base64: save.raw,
-                name: save.name,
+                base64: save.r,
+                name: save.d[0],
                 game: {
                     global: {
-                        highestLevelCleared: game.global.highestLevelCleared,
-                        highestRadonLevelCleared: game.global.highestRadonLevelCleared,
-                        totalHeliumEarned: game.global.totalHeliumEarned,
-                        totalPortals: game.global.totalPortals,
-                        totalRadonEarned: game.global.totalRadonEarned,
-                        totalRadPortals: game.global.totalRadPortals,
-                        version: game.global.stringVersion ?? game.global.version,
-                        lastOnline: game.global.lastOnline,
-                        spiresCompleted: game.global.spiresCompleted
+                        highestLevelCleared: save.d[1],
+                        highestRadonLevelCleared: save.d[2],
+                        totalHeliumEarned: save.d[3],
+                        totalPortals: save.d[4],
+                        totalRadonEarned: save.d[5],
+                        totalRadPortals: save.d[6],
+                        version: save.d[7],
+                        lastOnline: save.d[8],
+                        spiresCompleted: save.d[9],
                     }
                 }
             })
         }
-        catch(e) {
-            reject(`Failed to parse save ${save.name} from ${name}`);
-            return;
-        }
-
-        saveIndex = i;
-    }
-    
-    if(saveIndex === jsonArr.length - 1) {
-        jsonArr = null;
-        nameIndex++;
-        saveIndex = 0;
-        if(SAVE_NAMES[nameIndex] == null) {
-            elems.loadingOverlay.parentElement?.removeChild(elems.loadingOverlay);
-            resolve(saveArr);
-            return;
-        }
     }
 
-    await sleep(0)
-    loadSavesParse(nameIndex, saveIndex, jsonArr, saveArr, resolve, reject)
+    return saveArr;
 }
 
 /**
@@ -324,8 +273,6 @@ function loadElements() {
     const inputFilterHighestZone = document.getElementById('inputFilterHighestZone');
     const inputFilterTotalRadon = document.getElementById('inputFilterTotalRadon');
     const inputFilterHighestU2Zone = document.getElementById('inputFilterHighestU2Zone');
-    const loadingText = document.getElementById('loadingText');
-    const loadingOverlay = document.getElementById('loadingOverlay');
     const userFilterContainer = document.getElementById('userFilterContainer');
 
     if(!(savesContainer instanceof HTMLDivElement)) throw new Error('savesContainer is missing')
@@ -339,8 +286,6 @@ function loadElements() {
     if(!(inputFilterHighestZone instanceof HTMLInputElement)) throw new Error('inputFilterHighestZone is missing')
     if(!(inputFilterTotalRadon instanceof HTMLInputElement)) throw new Error('inputFilterTotalRadon is missing')
     if(!(inputFilterHighestU2Zone instanceof HTMLInputElement)) throw new Error('inputFilterHighestU2Zone is missing')
-    if(!(loadingText instanceof HTMLDivElement)) throw new Error('loadingText is missing')
-    if(!(loadingOverlay instanceof HTMLDivElement)) throw new Error('loadingOverlay is missing')
     if(!(userFilterContainer instanceof HTMLDivElement)) throw new Error('userFilterContainer is missing')
     
 
@@ -356,8 +301,6 @@ function loadElements() {
         inputFilterHighestZone,
         inputFilterTotalRadon,
         inputFilterHighestU2Zone,
-        loadingText,
-        loadingOverlay,
         userFilterContainer
     }
 }

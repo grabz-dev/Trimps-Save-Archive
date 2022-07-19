@@ -3,7 +3,7 @@ An interactive archive of Trimps saves from contributors in the Trimps community
 https://grabz-dev.github.io/Trimps-Save-Archive/
 
 # How to build this yourself
-This website requires JSON files to be placed inside the `output` folder that contain arrays of individual save files.  
+This website requires JSON files to be placed inside the `output` folder that contain individual save files.  
 To build these:
 * Create a `saves` directory.
 * In this directory, create a new directory named after the person who contributed the saves.
