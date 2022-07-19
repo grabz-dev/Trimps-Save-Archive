@@ -1,4 +1,4 @@
-/** @typedef {{r: string, d: [string, number, number, number, number, number, number, string, number, number]}[]} JSONSaves */
+/** @typedef {{r: string, d: [string, number, number, number, number, number, number, string, number, number, number, number, number]}[]} JSONSaves */
 
 import fs from 'fs';
 import LZString from './lib/lz-string.js';
@@ -34,7 +34,10 @@ for(const saveDir of saveDirs) {
                 /** @type {number} */(game.global.totalRadPortals),
                 /** @type {string} */(game.global.stringVersion ?? (game.global.version+'')),
                 /** @type {number} */(game.global.lastOnline),
-                /** @type {number} */(game.global.spiresCompleted)
+                /** @type {number} */(game.global.spiresCompleted),
+                /** @type {number} */(game.global.fluffyExp),
+                /** @type {number} */(game.global.fluffyExp2),
+                /** @type {number} */(game.global.fluffyPrestige)
             ]});
         }
         catch(e) {

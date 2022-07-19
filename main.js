@@ -1,6 +1,6 @@
 export const SAVE_NAMES = ['DrNye', 'Grabz', 'Neo', 'Quia', 'RMEfan', 'Snuthier']
 
-/** @typedef {{base64: string, name: string, game: { global: { version: string, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number, lastOnline: number, spiresCompleted: number } }, user: string}} Save */
+/** @typedef {{base64: string, name: string, game: { global: { version: string, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number, lastOnline: number, spiresCompleted: number, fluffyExp: number, fluffyExp2: number, fluffyPrestige: number } }, user: string}} Save */
 /** @typedef {import("./jsonify_saves").JSONSaves} JSONSaves} */
 /** 
  * @typedef {object} Elems 
@@ -197,6 +197,12 @@ function refreshList() {
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalHelium]')).textContent = prettify(save.game.global.totalHeliumEarned);
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=highestZone]')).textContent = (save.game.global.highestLevelCleared + 1)+'';
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalPortals]')).textContent = save.game.global.totalPortals+'';
+        if(save.game.global.fluffyExp > 0)
+            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=fluffy]')).textContent = `E${save.game.global.fluffyPrestige}L${calculateFluffyLevel(save.game.global.fluffyExp, save.game.global.fluffyPrestige)}`;
+        else {
+            /** @type {HTMLDivElement} */ (/** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=fluffy]')).parentElement).style.display = 'none';
+            /** @type {HTMLDivElement} */ (/** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=scruffy]')).parentElement).style.display = 'none';
+        }
 
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=spireClears]')).textContent = save.game.global.spiresCompleted+'';
 
@@ -207,6 +213,7 @@ function refreshList() {
             /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalRadon]')).textContent = prettify(save.game.global.totalRadonEarned);
             /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=highestZoneU2]')).textContent = (save.game.global.highestRadonLevelCleared + 1)+'';
             /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalPortalsU2]')).textContent = save.game.global.totalRadPortals+'';
+            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=scruffy]')).textContent = `S${calculateFluffyLevel(save.game.global.fluffyExp2, 0)}`;
         }
 
         /** @type {HTMLButtonElement} */ (saveElem.querySelector('button[data-id=copyToClipboard]')).addEventListener('click', () => {
@@ -258,6 +265,9 @@ async function loadSaves() {
                         version: save.d[7],
                         lastOnline: save.d[8],
                         spiresCompleted: save.d[9],
+                        fluffyExp: save.d[10],
+                        fluffyExp2: save.d[11],
+                        fluffyPrestige: save.d[12],
                     }
                 }
             })
@@ -438,9 +448,33 @@ function convertNotationsToNumber(num){
 
 /**
  * 
+ * @param {number} experience 
+ * @param {number} prestige
+ * @returns 
+ */
+function calculateFluffyLevel(experience, prestige) {
+    var prestigeRequire = Math.pow(5, prestige);	
+	var firstLevel =  1000 * prestigeRequire;
+    var growth = 4;
+
+    var level = Math.floor(log10(((experience / firstLevel) * (growth - 1)) + 1) / log10(growth));
+    return level;
+}
+
+/**
+ * 
  * @param {number} milliseconds 
  * @returns {Promise<void>}
  */
 function sleep(milliseconds) {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+/**
+ * 
+ * @param {number} val 
+ * @returns {number}
+ */
+function log10(val) {
+    return Math.log(val) / Math.LN10;
 }
