@@ -8,25 +8,28 @@
     <template id="templateSave">
         <div data-id="root" class="flex flex-col w-full bg-blue-100 hover:bg-blue-200 p-1 m-1">
             <div class="flex flex-row grow">
-                <div class="flex flex-col grow shrink basis-3/12">
+                <div class="flex flex-col grow shrink basis-1/5">
                     <div class="grow-0 text-left">From: <span class="font-bold" data-id="user"></span></div>
                     <div class="grow-0"><span class="" data-id="dateModified"></span></div>
                     <div class="grow-0">V <span class="" data-id="version"></span></div>
                 </div>
-                <div class="flex flex-col grow shrink basis-3/12">
+                <div class="flex flex-col grow shrink basis-1/5">
+                    <div class="grow-0">Spire Clears: <span class="font-bold" data-id="spireClears"></span></div>
+                </div>
+                <div class="flex flex-col grow shrink basis-1/5">
                     <div class="grow-0">Total Helium: <span class="font-bold" data-id="totalHelium"></span></div>
                     <div class="grow-0">Highest Zone: <span class="font-bold" data-id="highestZone"></span></div>
                     <div class="grow-0">Total Portals: <span class="font-bold" data-id="totalPortals"></span></div>
                 </div>
-                <div class="flex flex-col grow shrink basis-3/12" data-id="U2Container">
+                <div class="flex flex-col grow shrink basis-1/5" data-id="U2Container">
                     <div class="grow-0">Total Radon: <span class="font-bold" data-id="totalRadon"></span></div>
                     <div class="grow-0">Highest Zone: <span class="font-bold" data-id="highestZoneU2"></span></div>
                     <div class="grow-0">Total Portals: <span class="font-bold" data-id="totalPortalsU2"></span></div>
                 </div>
-                <div class="flex flex-col grow shrink basis-3/12">
+                <div class="flex flex-col grow shrink basis-1/5">
                     <div class="grow-0 text-right"><span class="" data-id="name"></span></div>
-                    <div class="grow p-1 m-1 text-center">
-                        <button data-id="copyToClipboard" class="box-content bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 active:bg-blue-600 active:border-blue-800">Copy to Clipboard</button>
+                    <div class="flex flex-row grow p-1 m-1 text-center">
+                        <button data-id="copyToClipboard" class="flex box-content bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 active:bg-blue-600 active:border-blue-800">Copy to Clipboard</button>
                     </div>
                 </div>
             </div>
@@ -38,24 +41,33 @@
     <div class="md:flex inset-0 relative w-full h-full">
         <div class="w-full h-auto md:w-3/12 bg-gray-300 p-2 m-2">
             Filters
-            <!--<div>
+            <div class="mt-2 mb-2">
                 <label><input type="checkbox" id="checkboxFilterTotalHelium"> Filter by Total Helium</label>
-                <input id="inputFilterTotalHelium" placeholder="">
-            </div>-->
+                <input id="inputFilterTotalHelium" placeholder="Total Helium">
+            </div>
             <div class="mt-2 mb-2">
                 <label><input type="checkbox" id="checkboxFilterHighestZone"> Filter by Highest Zone</label>
                 <input id="inputFilterHighestZone" placeholder="Highest Zone" type="number" min="1" max="999">
             </div>
-            <!--<div>
+            <div class="mt-2 mb-2">
                 <label><input type="checkbox" id="checkboxFilterTotalRadon"> Filter by Total Radon</label>
-            </div>-->
+                <input id="inputFilterTotalRadon" placeholder="Total Radon">
+            </div>
             <div class="mt-2 mb-2">
                 <label><input type="checkbox" id="checkboxFilterHighestU2Zone"> Filter by Highest U2 Zone</label>
                 <input id="inputFilterHighestU2Zone" placeholder="Highest U2 Zone" type="number" min="1" max="999">
             </div>
-            <button id="filterButton" class="box-content bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 active:bg-blue-600 active:border-blue-800">Filter</button>
+            <hr>
+            <div id="userFilterContainer" class="flex flex-col"></div>
+            <hr>
+            <button id="filterButton" class="mt-2 box-content bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 active:bg-blue-600 active:border-blue-800">Filter</button>
         </div>
         <div id="savesContainer" class="w-full h-auto md:w-9/12 bg-gray-100 p-2 m-2 ml-0 overflow-y-scroll"></div>
+    </div>
+    <div id="loadingOverlay" class="flex flex-row inset-0 w-full h-full fixed opacity-90 bg-black justify-center items-center">
+        <div class="flex flex-col">
+            <div id="loadingText" class="flex text-white text-5xl select-none text-center"></div>
+        </div>
     </div>
 
     <script type="module" src="./main.js"></script>

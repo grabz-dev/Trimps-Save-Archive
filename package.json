@@ -6,6 +6,9 @@
   "main": "jsonify_saves.js",
   "author": "Grabz",
   "license": "MIT",
+  "scripts": {
+    "watch": "npx tailwindcss -i ./style.css -o ./css/output.css --watch"
+  },
   "devDependencies": {
     "tailwindcss": "^3.1.6"
   }

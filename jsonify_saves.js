@@ -1,24 +1,25 @@
-/** @typedef {{[name: string]: {raw: string, name: string, lastModified: number}[]}} JSONSaves */
+/** @typedef {{raw: string, name: string}[]} JSONSaves */
 
 import fs from 'fs';
-const { promises: { readdir, readFile, writeFile, stat } } = fs;
+const { promises: { readdir, readFile, writeFile } } = fs;
 
 const SAVES_PATH = './saves'
-/** @type {JSONSaves} */
-const output = {}
 
 const saveDirs = await getDirectoryNames(SAVES_PATH);
 for(const saveDir of saveDirs) {
+    /** @type {JSONSaves} */
+    const output = []
+
     console.info(`Processing saves from ${saveDir}`)
-    output[saveDir] = []
     const saveNames = await getFileNames(`${SAVES_PATH}/${saveDir}`);
     for(const saveName of saveNames) {
         const save = await readFile(`${SAVES_PATH}/${saveDir}/${saveName}`, 'utf8');
-        const stats = await stat(`${SAVES_PATH}/${saveDir}/${saveName}`);
-        output[saveDir].push({raw: save, name: saveName, lastModified: stats.mtime.getTime()});
+        if(!save.startsWith('N4Ig')) continue;
+        output.push({raw: save, name: saveName});
     }
+
+    await writeFile(`./output/${saveDir}.json`, JSON.stringify(output));
 }
-await writeFile('./output/saves.json', JSON.stringify(output));
 console.info("All done")
 
 /**

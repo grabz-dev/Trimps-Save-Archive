@@ -1,31 +1,52 @@
-export {}
+export const SAVE_NAMES = ['DrNye', 'Grabz', 'Quia', 'RMEfan', 'Snuthier']
+//export const SAVE_NAMES = ['Grabz', 'Snuthier']
 
 /** @type {any} */
 // @ts-ignore
 const LZ = LZString;
 
-/** @typedef {{base64: string, name: string, lastModified: number, game: { global: { version: number, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number } }, user: string}} Save */
+/** @typedef {{base64: string, name: string, game: { global: { version: number, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number, lastOnline: number, spiresCompleted: number } }, user: string}} Save */
 /** @typedef {import("./jsonify_saves").JSONSaves} JSONSaves} */
 /** 
  * @typedef {object} Elems 
  * @property {HTMLDivElement} savesContainer
  * @property {HTMLTemplateElement} templateSave
+ * @property {HTMLInputElement} checkboxFilterTotalHelium
  * @property {HTMLInputElement} checkboxFilterHighestZone
+ * @property {HTMLInputElement} checkboxFilterTotalRadon
  * @property {HTMLInputElement} checkboxFilterHighestU2Zone
+ * @property {HTMLInputElement} inputFilterTotalHelium
  * @property {HTMLInputElement} inputFilterHighestZone
+ * @property {HTMLInputElement} inputFilterTotalRadon
  * @property {HTMLInputElement} inputFilterHighestU2Zone
  * @property {HTMLButtonElement} filterButton
+ * @property {HTMLDivElement} loadingText
+ * @property {HTMLDivElement} loadingOverlay
+ * @property {HTMLDivElement} userFilterContainer
 */
 
-const elems = loadElements();
-const saves = await loadSaves();
-registerFilters();
+/** @type {Elems} */
+let elems;
+/** @type {Save[]} */
+let saves;
+const config = {
+    /** @type {{[name: string]: boolean}} */
+    userFilter: {}
+}
+init();
 
-
-
+async function init() {
+    elems = loadElements();
+    /** @type {Save[]} */
+    saves = await loadSaves();
+    if(typeof saves === 'string') {
+        throw new Error(saves);
+    }
+    registerFilters();
+}
 
 function registerFilters() {
-    const checkboxes = [elems.checkboxFilterHighestZone, elems.checkboxFilterHighestU2Zone];
+    const checkboxes = [elems.checkboxFilterTotalHelium, elems.checkboxFilterHighestZone, elems.checkboxFilterTotalRadon, elems.checkboxFilterHighestU2Zone];
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function(e) {
             if(this.checked) {
@@ -38,8 +59,32 @@ function registerFilters() {
             }
         })
     });
-    if(!checkboxes.find(v => v.checked)) elems.checkboxFilterHighestZone.checked = true;
-    elems.inputFilterHighestZone.value = 60+'';
+    if(!checkboxes.find(v => v.checked)) elems.checkboxFilterTotalHelium.checked = true;
+    elems.inputFilterTotalHelium.value = '1.5M';
+
+    (() => {
+        /** @type {HTMLInputElement[]} */
+        const checkboxes = []
+
+        SAVE_NAMES.forEach(name => {
+            const label = document.createElement('label');
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            label.innerText = ` ${name}`;
+            label.prepend(input);
+            elems.userFilterContainer.appendChild(label);
+            checkboxes.push(input);
+
+            input.checked = true;
+            config.userFilter[name] = true;
+
+            input.addEventListener('change', function(e) {
+                config.userFilter[name] = this.checked;
+            });
+        });
+    })();
+
+
     elems.filterButton.addEventListener('click', () => {
         refreshList();
     });
@@ -48,46 +93,84 @@ function registerFilters() {
 
 function refreshList() {
     /** @type {Save[]} */
-    let filteredSaves = []
+    let filteredSaves = saves.slice();
     /** @type {Save|null} */
     let chosenSave = null;
-    if(elems.checkboxFilterHighestZone.checked) {
-        const zone = +elems.inputFilterHighestZone.value;
+
+    filteredSaves = filteredSaves.filter(v => config.userFilter[v.user]);
+
+    /**
+     * 
+     * @param {number} zone 
+     * @param {1|2} universe 
+     * @returns 
+     */
+    function zoneFilter(zone, universe) {
         if(zone < 1 || zone > 999) return;
-        filteredSaves = saves.slice();
-        filteredSaves.sort((a, b) => a.game.global.highestLevelCleared - b.game.global.highestLevelCleared)
+        
+        if(universe === 1) filteredSaves.sort((a, b) => a.game.global.highestLevelCleared - b.game.global.highestLevelCleared)
+        else if(universe === 2) filteredSaves.sort((a, b) => a.game.global.highestRadonLevelCleared - b.game.global.highestRadonLevelCleared)
+
         for(let i = 0; i < filteredSaves.length; i++) {
             let filteredSave = filteredSaves[i];
-            if(filteredSave.game.global.highestLevelCleared + 1 >= zone) {
-                filteredSaves = filteredSaves.slice(Math.max(0, i - 10), i + 15);
+            let highestLevelCleared = 0;
+            if(universe === 1) highestLevelCleared = filteredSave.game.global.highestLevelCleared;
+            else if(universe === 2) highestLevelCleared = filteredSave.game.global.highestRadonLevelCleared;
+
+            if(highestLevelCleared + 1 >= zone) {
+                filteredSaves = filteredSaves.slice(Math.max(0, i - 20), i + 30);
                 chosenSave = filteredSave;
                 break;
             }
             if(i + 1 === filteredSaves.length) {
-                filteredSaves = filteredSaves.slice(Math.max(0, i - 15));
+                filteredSaves = filteredSaves.slice(Math.max(0, i - 30));
                 chosenSave = filteredSave;
                 break;
             }
         }
     }
-    else if(elems.checkboxFilterHighestU2Zone.checked)  {
-        const zone = +elems.inputFilterHighestU2Zone.value;
-        if(zone < 1 || zone > 999) return;
-        filteredSaves = saves.slice();
-        filteredSaves.sort((a, b) => a.game.global.highestRadonLevelCleared - b.game.global.highestRadonLevelCleared)
+
+    /**
+     * 
+     * @param {number} helium 
+     * @param {1|2} universe 
+     * @returns 
+     */
+    function heliumFilter(helium, universe) {
+        if(universe === 1) filteredSaves.sort((a, b) => a.game.global.totalHeliumEarned - b.game.global.totalHeliumEarned)
+        else if(universe === 2) filteredSaves.sort((a, b) => a.game.global.totalRadonEarned - b.game.global.totalRadonEarned)
+
         for(let i = 0; i < filteredSaves.length; i++) {
             let filteredSave = filteredSaves[i];
-            if(filteredSave.game.global.highestRadonLevelCleared + 1 >= zone) {
-                filteredSaves = filteredSaves.slice(Math.max(0, i - 10), i + 15);
+
+            let totalHelium = 0;
+            if(universe === 1) totalHelium = filteredSave.game.global.totalHeliumEarned;
+            else if(universe === 2) totalHelium = filteredSave.game.global.totalRadonEarned;
+
+            if(totalHelium >= helium) {
+                filteredSaves = filteredSaves.slice(Math.max(0, i - 20), i + 30);
                 chosenSave = filteredSave;
                 break;
             }
             if(i + 1 === filteredSaves.length) {
-                filteredSaves = filteredSaves.slice(Math.max(0, i - 15));
+                filteredSaves = filteredSaves.slice(Math.max(0, i - 30));
                 chosenSave = filteredSave;
                 break;
             }
         }
+    }
+
+    if(elems.checkboxFilterHighestZone.checked) {
+        zoneFilter(+elems.inputFilterHighestZone.value, 1);
+    }
+    else if(elems.checkboxFilterHighestU2Zone.checked)  {
+        zoneFilter(+elems.inputFilterHighestU2Zone.value, 2);
+    }
+    else if(elems.checkboxFilterTotalHelium.checked) {
+        heliumFilter(convertNotationsToNumber(elems.inputFilterTotalHelium.value), 1);
+    }
+    else if(elems.checkboxFilterTotalRadon.checked) {
+        heliumFilter(convertNotationsToNumber(elems.inputFilterTotalRadon.value), 2);
     }
     else {
         return;
@@ -95,11 +178,13 @@ function refreshList() {
 
     elems.savesContainer.innerHTML = '';
     let chosenSaveFound = false;
+    let chosenSaveIndex = -1;
     for(let save of filteredSaves) {
-        const saveElem = /** @type {HTMLDivElement} */ (elems.templateSave.content.cloneNode(true));
+        const saveElem = /** @type {DocumentFragment} */ (elems.templateSave.content.cloneNode(true));
 
         if(save === chosenSave) {
             chosenSaveFound = true;
+            chosenSaveIndex = elems.savesContainer.children.length;
             /** @type {HTMLDivElement} */ (saveElem.querySelector('div[data-id=root]')).classList.add('bg-green-200', 'hover:bg-green-300');
         }
         else if(!chosenSaveFound) {
@@ -111,12 +196,14 @@ function refreshList() {
 
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=user]')).textContent = save.user;
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=name]')).textContent = save.name;
-        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=dateModified]')).textContent = getFormattedDate(save.lastModified);
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=dateModified]')).textContent = getFormattedDate(save.game.global.lastOnline);
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=version]')).textContent = save.game.global.version+'';
 
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalHelium]')).textContent = prettify(save.game.global.totalHeliumEarned);
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=highestZone]')).textContent = (save.game.global.highestLevelCleared + 1)+'';
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalPortals]')).textContent = save.game.global.totalPortals+'';
+
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=spireClears]')).textContent = save.game.global.spiresCompleted+'';
 
         if(save.game.global.highestRadonLevelCleared <= 0) {
             /** @type {HTMLDivElement} */ (saveElem.querySelector('div[data-id=U2Container]')).style.visibility = 'hidden';
@@ -128,57 +215,98 @@ function refreshList() {
         }
 
         /** @type {HTMLButtonElement} */ (saveElem.querySelector('button[data-id=copyToClipboard]')).addEventListener('click', () => {
-            window.prompt("Copy to clipboard: Ctrl+C, Enter", save.base64);
+            navigator.clipboard.writeText(save.base64);
         })
-        
+    
         elems.savesContainer.appendChild(saveElem);
+    }
+
+    if(chosenSaveIndex > -1) {
+        elems.savesContainer.children[Math.max(0, chosenSaveIndex - 2)].scrollIntoView(true);
     }
 }
 
 /**
  * @returns {Promise<Save[]>}
  */
-async function loadSaves() {
-    /** @type {Save[]} */
-    const saves = []
+function loadSaves() {
+    return new Promise((resolve, reject) => {
+        loadSavesParse(0, 0, null, [], resolve, reject);
+    })
+}
 
-    /** @type {JSONSaves} */
-    const json = await (await fetch('output/saves.json')).json()
-    for(const [name, arr] of Object.entries(json)) {
-        for(const save of arr) {
-            const decompressed = LZ.decompressFromBase64(save.raw);
-            if(decompressed == null) {
-                console.warn(`Failed to decompress save ${save.name} from ${name}`);
-                continue;
-            }
-            try {
-                const game = JSON.parse(decompressed);
-                saves.push({
-                    user: name,
-                    base64: save.raw,
-                    name: save.name,
-                    lastModified: save.lastModified,
-                    game: {
-                        global: {
-                            highestLevelCleared: game.global.highestLevelCleared,
-                            highestRadonLevelCleared: game.global.highestRadonLevelCleared,
-                            totalHeliumEarned: game.global.totalHeliumEarned,
-                            totalPortals: game.global.totalPortals,
-                            totalRadonEarned: game.global.totalRadonEarned,
-                            totalRadPortals: game.global.totalRadPortals,
-                            version: game.global.version,
-                        }
-                    }
-                })
-            }
-            catch(e) {
-                console.error(`Failed to parse save ${save.name} from ${name}`);
-                throw e;
-            }
+/**
+ * 
+ * @param {number} nameIndex 
+ * @param {number} saveIndex 
+ * @param {JSONSaves|null} jsonArr
+ * @param {Save[]} saveArr 
+ * @param {(arg: Save[]) => void} resolve
+ * @param {(err: string) => void} reject
+ */
+async function loadSavesParse(nameIndex, saveIndex, jsonArr, saveArr, resolve, reject) {
+    const name = SAVE_NAMES[nameIndex];
+
+    if(jsonArr == null) {
+        jsonArr = await (await fetch(`output/${name}.json`)).json()
+        if(jsonArr == null) {
+            reject(`Failed to fetch from ${name}.json`);
+            return;
         }
     }
 
-    return saves;
+    elems.loadingText.innerHTML = `Loading Saves<br>${name}<br>${saveIndex} / ${jsonArr?.length}`;
+
+    const l = Math.min(saveIndex + 21, jsonArr.length);
+    for(let i = saveIndex; i < l; i++) {
+        const save = jsonArr[i];
+        const decompressed = LZ.decompressFromBase64(save.raw);
+        if(decompressed == null) {
+            console.warn(`Failed to decompress save ${save.name} from ${name}`);
+            continue;
+        }
+        try {
+            const game = JSON.parse(decompressed);
+            saveArr.push({
+                user: name,
+                base64: save.raw,
+                name: save.name,
+                game: {
+                    global: {
+                        highestLevelCleared: game.global.highestLevelCleared,
+                        highestRadonLevelCleared: game.global.highestRadonLevelCleared,
+                        totalHeliumEarned: game.global.totalHeliumEarned,
+                        totalPortals: game.global.totalPortals,
+                        totalRadonEarned: game.global.totalRadonEarned,
+                        totalRadPortals: game.global.totalRadPortals,
+                        version: game.global.stringVersion ?? game.global.version,
+                        lastOnline: game.global.lastOnline,
+                        spiresCompleted: game.global.spiresCompleted
+                    }
+                }
+            })
+        }
+        catch(e) {
+            reject(`Failed to parse save ${save.name} from ${name}`);
+            return;
+        }
+
+        saveIndex = i;
+    }
+    
+    if(saveIndex === jsonArr.length - 1) {
+        jsonArr = null;
+        nameIndex++;
+        saveIndex = 0;
+        if(SAVE_NAMES[nameIndex] == null) {
+            elems.loadingOverlay.parentElement?.removeChild(elems.loadingOverlay);
+            resolve(saveArr);
+            return;
+        }
+    }
+
+    await sleep(0)
+    loadSavesParse(nameIndex, saveIndex, jsonArr, saveArr, resolve, reject)
 }
 
 /**
@@ -187,32 +315,50 @@ async function loadSaves() {
 function loadElements() {
     const savesContainer = document.getElementById('savesContainer');
     const templateSave = document.getElementById('templateSave');
-    //const checkboxFilterTotalHelium = document.getElementById('checkboxFilterTotalHelium');
+    const checkboxFilterTotalHelium = document.getElementById('checkboxFilterTotalHelium');
     const checkboxFilterHighestZone = document.getElementById('checkboxFilterHighestZone');
-    //const checkboxFilterTotalRadon = document.getElementById('checkboxFilterTotalRadon');
+    const checkboxFilterTotalRadon = document.getElementById('checkboxFilterTotalRadon');
     const checkboxFilterHighestU2Zone = document.getElementById('checkboxFilterHighestU2Zone');
     const filterButton = document.getElementById('filterButton');
+    const inputFilterTotalHelium = document.getElementById('inputFilterTotalHelium');
     const inputFilterHighestZone = document.getElementById('inputFilterHighestZone');
+    const inputFilterTotalRadon = document.getElementById('inputFilterTotalRadon');
     const inputFilterHighestU2Zone = document.getElementById('inputFilterHighestU2Zone');
+    const loadingText = document.getElementById('loadingText');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const userFilterContainer = document.getElementById('userFilterContainer');
 
     if(!(savesContainer instanceof HTMLDivElement)) throw new Error('savesContainer is missing')
     if(!(templateSave instanceof HTMLTemplateElement)) throw new Error('templateSave is missing')
-    //if(!(checkboxFilterTotalHelium instanceof HTMLInputElement)) throw new Error('checkboxFilterTotalHelium is missing')
+    if(!(checkboxFilterTotalHelium instanceof HTMLInputElement)) throw new Error('checkboxFilterTotalHelium is missing')
     if(!(checkboxFilterHighestZone instanceof HTMLInputElement)) throw new Error('checkboxFilterHighestZone is missing')
-    //if(!(checkboxFilterTotalRadon instanceof HTMLInputElement)) throw new Error('checkboxFilterTotalRadon is missing')
+    if(!(checkboxFilterTotalRadon instanceof HTMLInputElement)) throw new Error('checkboxFilterTotalRadon is missing')
     if(!(checkboxFilterHighestU2Zone instanceof HTMLInputElement)) throw new Error('checkboxFilterHighestU2Zone is missing')
     if(!(filterButton instanceof HTMLButtonElement)) throw new Error('filterButton is not HTMLButtonElement')
+    if(!(inputFilterTotalHelium instanceof HTMLInputElement)) throw new Error('inputFilterTotalHelium is missing')
     if(!(inputFilterHighestZone instanceof HTMLInputElement)) throw new Error('inputFilterHighestZone is missing')
+    if(!(inputFilterTotalRadon instanceof HTMLInputElement)) throw new Error('inputFilterTotalRadon is missing')
     if(!(inputFilterHighestU2Zone instanceof HTMLInputElement)) throw new Error('inputFilterHighestU2Zone is missing')
+    if(!(loadingText instanceof HTMLDivElement)) throw new Error('loadingText is missing')
+    if(!(loadingOverlay instanceof HTMLDivElement)) throw new Error('loadingOverlay is missing')
+    if(!(userFilterContainer instanceof HTMLDivElement)) throw new Error('userFilterContainer is missing')
+    
 
     return {
         savesContainer,
         templateSave,
+        checkboxFilterTotalHelium,
         checkboxFilterHighestZone,
+        checkboxFilterTotalRadon,
         checkboxFilterHighestU2Zone,
         filterButton,
+        inputFilterTotalHelium,
         inputFilterHighestZone,
-        inputFilterHighestU2Zone
+        inputFilterTotalRadon,
+        inputFilterHighestU2Zone,
+        loadingText,
+        loadingOverlay,
+        userFilterContainer
     }
 }
 
@@ -288,4 +434,53 @@ function prettifySub(number){
 	if (number === floor) // number is an integer, just show it as-is
 		return number+'';
 	return number.toFixed(3 - floor.toString().length);
+}
+
+/**
+ * 
+ * @param {string} num 
+ * @returns {number}
+ */
+function convertNotationsToNumber(num){
+	num = num.toLowerCase();
+	if (num.split('e')[1]){
+		return Math.floor(parseFloat(num));
+	}
+	var letters = num.replace(/[^a-z]/gi, "");
+	var base = 0;
+    let _num = +num;
+	if (letters.length) {
+        var suffices = [
+            'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud',
+            'Dd', 'Td', 'Qad', 'Qid', 'Sxd', 'Spd', 'Od', 'Nd', 'V', 'Uv', 'Dv',
+            'Tv', 'Qav', 'Qiv', 'Sxv', 'Spv', 'Ov', 'Nv', 'Tg', 'Utg', 'Dtg', 'Ttg',
+            'Qatg', 'Qitg', 'Sxtg', 'Sptg', 'Otg', 'Ntg', 'Qaa', 'Uqa', 'Dqa', 'Tqa',
+            'Qaqa', 'Qiqa', 'Sxqa', 'Spqa', 'Oqa', 'Nqa', 'Qia', 'Uqi', 'Dqi',
+            'Tqi', 'Qaqi', 'Qiqi', 'Sxqi', 'Spqi', 'Oqi', 'Nqi', 'Sxa', 'Usx',
+            'Dsx', 'Tsx', 'Qasx', 'Qisx', 'Sxsx', 'Spsx', 'Osx', 'Nsx', 'Spa',
+            'Usp', 'Dsp', 'Tsp', 'Qasp', 'Qisp', 'Sxsp', 'Spsp', 'Osp', 'Nsp',
+            'Og', 'Uog', 'Dog', 'Tog', 'Qaog', 'Qiog', 'Sxog', 'Spog', 'Oog',
+            'Nog', 'Na', 'Un', 'Dn', 'Tn', 'Qan', 'Qin', 'Sxn', 'Spn', 'On',
+            'Nn', 'Ct', 'Uc'
+        ];
+        for (var x = 0; x < suffices.length; x++){
+            if (suffices[x].toLowerCase() == letters){
+                base = x + 1;
+                break;
+            }
+        }
+		
+		if (base) _num = Math.round(parseFloat(num.split(letters)[0]) * Math.pow(1000, base));
+	}
+	if (!base) _num = parseInt(num, 10);
+	return _num;
+}
+
+/**
+ * 
+ * @param {number} milliseconds 
+ * @returns {Promise<void>}
+ */
+function sleep(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
