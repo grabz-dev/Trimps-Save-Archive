@@ -225,11 +225,18 @@ function refreshList() {
  * @returns {Promise<Save[]>}
  */
 async function loadSaves() {
+    /** @type {{[name: string]: Promise<Response>}} */
+    const files = {}
+
+    for(const name of SAVE_NAMES) {
+        files[name] = fetch(`output/${name}.json`);
+    }
+
     /** @type {Save[]} */
     const saveArr = [];
     for(const name of SAVE_NAMES) {
         /** @type {JSONSaves|null} */
-        const jsonArr = await (await fetch(`output/${name}.json`)).json()
+        const jsonArr = await (await files[name]).json()
         if(jsonArr == null) {
             console.error(`Failed to fetch from ${name}.json`);
             continue;
