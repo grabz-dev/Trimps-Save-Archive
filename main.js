@@ -16,6 +16,8 @@ export const SAVE_NAMES = ['DrNye', 'Grabz', 'Neo', 'Quia', 'RMEfan', 'Snuthier'
  * @property {HTMLInputElement} inputFilterHighestU2Zone
  * @property {HTMLButtonElement} filterButton
  * @property {HTMLDivElement} userFilterContainer
+ * @property {HTMLDivElement} loadingText
+ * @property {HTMLDivElement} loadingOverlay
 */
 
 /** @type {Elems} */
@@ -255,6 +257,8 @@ async function loadSaves() {
         }
     }
 
+    elems.loadingOverlay.parentElement?.removeChild(elems.loadingOverlay);
+
     return saveArr;
 }
 
@@ -274,6 +278,8 @@ function loadElements() {
     const inputFilterTotalRadon = document.getElementById('inputFilterTotalRadon');
     const inputFilterHighestU2Zone = document.getElementById('inputFilterHighestU2Zone');
     const userFilterContainer = document.getElementById('userFilterContainer');
+    const loadingText = document.getElementById('loadingText');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
     if(!(savesContainer instanceof HTMLDivElement)) throw new Error('savesContainer is missing')
     if(!(templateSave instanceof HTMLTemplateElement)) throw new Error('templateSave is missing')
@@ -287,6 +293,8 @@ function loadElements() {
     if(!(inputFilterTotalRadon instanceof HTMLInputElement)) throw new Error('inputFilterTotalRadon is missing')
     if(!(inputFilterHighestU2Zone instanceof HTMLInputElement)) throw new Error('inputFilterHighestU2Zone is missing')
     if(!(userFilterContainer instanceof HTMLDivElement)) throw new Error('userFilterContainer is missing')
+    if(!(loadingText instanceof HTMLDivElement)) throw new Error('loadingText is missing')
+    if(!(loadingOverlay instanceof HTMLDivElement)) throw new Error('loadingOverlay is missing')
     
 
     return {
@@ -301,7 +309,9 @@ function loadElements() {
         inputFilterHighestZone,
         inputFilterTotalRadon,
         inputFilterHighestU2Zone,
-        userFilterContainer
+        userFilterContainer,
+        loadingText,
+        loadingOverlay
     }
 }
 
