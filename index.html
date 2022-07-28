@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="./css/output.css?v=5" rel="stylesheet">
+    <link href="./css/output.css?v=6" rel="stylesheet">
 
     <template id="templateSave">
         <div data-id="root" class="flex flex-col w-full bg-blue-100 hover:bg-blue-200 p-1 m-1">
@@ -61,7 +61,11 @@
             <hr>
             <div id="userFilterContainer" class="flex flex-col"></div>
             <hr>
-            <button id="filterButton" class="mt-2 box-content bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 active:bg-blue-600 active:border-blue-800">Filter</button>
+            <button id="filterButton" class="mt-2 mb-2 box-content bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 active:bg-blue-600 active:border-blue-800">Filter</button>
+            <hr>
+            <div class="mt-2 bg-red-200 text-center h-7">Red color means the save is<br>below your selected filter</div>
+            <div class="bg-green-200 text-center h-7">Green color means the save is<br>the closest match to your selected filter</div>
+            <div class="bg-blue-200 text-center h-7">Blue color means the save is<br>above your selected filter</div>
         </div>
         <div id="savesContainer" class="w-full h-auto md:w-9/12 bg-gray-100 p-2 m-2 ml-0 overflow-y-scroll"></div>
     </div>
@@ -71,6 +75,6 @@
         </div>
     </div>
 
-    <script type="module" src="./main.js?v=5"></script>
+    <script type="module" src="./main.js?v=6"></script>
 </body>
 </html>
