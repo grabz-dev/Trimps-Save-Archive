@@ -1,6 +1,6 @@
 export const SAVE_NAMES = ['DrNye', 'Grabz', 'Neo', 'Quia', 'RMEfan', 'Snuthier']
 
-/** @typedef {{base64: string, name: string, game: { global: { version: string, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number, lastOnline: number, spiresCompleted: number, fluffyExp: number, fluffyExp2: number, fluffyPrestige: number } }, user: string}} Save */
+/** @typedef {{user: string, name: string, version: string, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number, lastOnline: number, spiresCompleted: number, fluffyExp: number, fluffyExp2: number, fluffyPrestige: number, totalBones: number, spentBones: number, steamBones: number }} Save */
 /** @typedef {import("./jsonify_saves").JSONSaves} JSONSaves} */
 /** 
  * @typedef {object} Elems 
@@ -103,14 +103,14 @@ function refreshList() {
     function zoneFilter(zone, universe) {
         if(zone < 1 || zone > 999) return;
         
-        if(universe === 1) filteredSaves.sort((a, b) => a.game.global.highestLevelCleared - b.game.global.highestLevelCleared)
-        else if(universe === 2) filteredSaves.sort((a, b) => a.game.global.highestRadonLevelCleared - b.game.global.highestRadonLevelCleared)
+        if(universe === 1) filteredSaves.sort((a, b) => a.highestLevelCleared - b.highestLevelCleared)
+        else if(universe === 2) filteredSaves.sort((a, b) => a.highestRadonLevelCleared - b.highestRadonLevelCleared)
 
         for(let i = 0; i < filteredSaves.length; i++) {
             let filteredSave = filteredSaves[i];
             let highestLevelCleared = 0;
-            if(universe === 1) highestLevelCleared = filteredSave.game.global.highestLevelCleared;
-            else if(universe === 2) highestLevelCleared = filteredSave.game.global.highestRadonLevelCleared;
+            if(universe === 1) highestLevelCleared = filteredSave.highestLevelCleared;
+            else if(universe === 2) highestLevelCleared = filteredSave.highestRadonLevelCleared;
 
             if(highestLevelCleared + 1 >= zone) {
                 filteredSaves = filteredSaves.slice(Math.max(0, i - 20), i + 30);
@@ -132,15 +132,15 @@ function refreshList() {
      * @returns 
      */
     function heliumFilter(helium, universe) {
-        if(universe === 1) filteredSaves.sort((a, b) => a.game.global.totalHeliumEarned - b.game.global.totalHeliumEarned)
-        else if(universe === 2) filteredSaves.sort((a, b) => a.game.global.totalRadonEarned - b.game.global.totalRadonEarned)
+        if(universe === 1) filteredSaves.sort((a, b) => a.totalHeliumEarned - b.totalHeliumEarned)
+        else if(universe === 2) filteredSaves.sort((a, b) => a.totalRadonEarned - b.totalRadonEarned)
 
         for(let i = 0; i < filteredSaves.length; i++) {
             let filteredSave = filteredSaves[i];
 
             let totalHelium = 0;
-            if(universe === 1) totalHelium = filteredSave.game.global.totalHeliumEarned;
-            else if(universe === 2) totalHelium = filteredSave.game.global.totalRadonEarned;
+            if(universe === 1) totalHelium = filteredSave.totalHeliumEarned;
+            else if(universe === 2) totalHelium = filteredSave.totalRadonEarned;
 
             if(totalHelium >= helium) {
                 filteredSaves = filteredSaves.slice(Math.max(0, i - 20), i + 30);
@@ -191,33 +191,41 @@ function refreshList() {
 
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=user]')).textContent = save.user;
         /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=name]')).textContent = save.name;
-        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=dateModified]')).textContent = getFormattedDate(save.game.global.lastOnline);
-        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=version]')).textContent = save.game.global.version+'';
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=dateModified]')).textContent = getFormattedDate(save.lastOnline);
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=version]')).textContent = save.version+'';
 
-        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalHelium]')).textContent = prettify(save.game.global.totalHeliumEarned);
-        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=highestZone]')).textContent = (save.game.global.highestLevelCleared + 1)+'';
-        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalPortals]')).textContent = save.game.global.totalPortals+'';
-        if(save.game.global.fluffyExp > 0)
-            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=fluffy]')).textContent = `E${save.game.global.fluffyPrestige}L${calculateFluffyLevel(save.game.global.fluffyExp, save.game.global.fluffyPrestige)}`;
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalHelium]')).textContent = prettify(save.totalHeliumEarned);
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=highestZone]')).textContent = (save.highestLevelCleared + 1)+'';
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalPortals]')).textContent = save.totalPortals+'';
+
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalBones]')).textContent = save.totalBones+'';
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=spentBones]')).textContent = save.spentBones+'';
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=steamBones]')).textContent = save.steamBones+'';
+
+        if(save.fluffyExp > 0)
+            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=fluffy]')).textContent = `E${save.fluffyPrestige}L${calculateFluffyLevel(save.fluffyExp, save.fluffyPrestige)}`;
         else {
             /** @type {HTMLDivElement} */ (/** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=fluffy]')).parentElement).style.display = 'none';
             /** @type {HTMLDivElement} */ (/** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=scruffy]')).parentElement).style.display = 'none';
         }
 
-        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=spireClears]')).textContent = save.game.global.spiresCompleted+'';
+        /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=spireClears]')).textContent = save.spiresCompleted+'';
 
-        if(save.game.global.highestRadonLevelCleared <= 0) {
+        if(save.highestRadonLevelCleared <= 0) {
             /** @type {HTMLDivElement} */ (saveElem.querySelector('div[data-id=U2Container]')).style.visibility = 'hidden';
         }
         else {
-            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalRadon]')).textContent = prettify(save.game.global.totalRadonEarned);
-            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=highestZoneU2]')).textContent = (save.game.global.highestRadonLevelCleared + 1)+'';
-            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalPortalsU2]')).textContent = save.game.global.totalRadPortals+'';
-            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=scruffy]')).textContent = `S${calculateFluffyLevel(save.game.global.fluffyExp2, 0)}`;
+            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalRadon]')).textContent = prettify(save.totalRadonEarned);
+            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=highestZoneU2]')).textContent = (save.highestRadonLevelCleared + 1)+'';
+            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=totalPortalsU2]')).textContent = save.totalRadPortals+'';
+            /** @type {HTMLSpanElement} */ (saveElem.querySelector('span[data-id=scruffy]')).textContent = `S${calculateFluffyLevel(save.fluffyExp2, 0)}`;
         }
 
-        /** @type {HTMLButtonElement} */ (saveElem.querySelector('button[data-id=copyToClipboard]')).addEventListener('click', () => {
-            navigator.clipboard.writeText(save.base64);
+        /** @type {HTMLButtonElement} */ (saveElem.querySelector('button[data-id=copyToClipboard]')).addEventListener('click', async function() {
+            this.innerText = 'Downloading...';
+            const saveTxt = await (await fetch(`saves/${save.user}/${save.name}`)).text();
+            this.innerText = 'Copied!';
+            navigator.clipboard.writeText(saveTxt);
         })
     
         elems.savesContainer.appendChild(saveElem);
@@ -232,18 +240,11 @@ function refreshList() {
  * @returns {Promise<Save[]>}
  */
 async function loadSaves() {
-    /** @type {{[name: string]: Promise<Response>}} */
-    const files = {}
-
-    for(const name of SAVE_NAMES) {
-        files[name] = fetch(`output/${name}.json`);
-    }
-
     /** @type {Save[]} */
     const saveArr = [];
     for(const name of SAVE_NAMES) {
         /** @type {JSONSaves|null} */
-        const jsonArr = await (await files[name]).json()
+        const jsonArr = await (await (fetch(`output/output.json`))).json();
         if(jsonArr == null) {
             console.error(`Failed to fetch from ${name}.json`);
             continue;
@@ -251,25 +252,23 @@ async function loadSaves() {
 
         for(const save of jsonArr) {
             saveArr.push({
-                user: name,
-                base64: save.r,
-                name: save.d[0],
-                game: {
-                    global: {
-                        highestLevelCleared: save.d[1],
-                        highestRadonLevelCleared: save.d[2],
-                        totalHeliumEarned: save.d[3],
-                        totalPortals: save.d[4],
-                        totalRadonEarned: save.d[5],
-                        totalRadPortals: save.d[6],
-                        version: save.d[7],
-                        lastOnline: save.d[8],
-                        spiresCompleted: save.d[9],
-                        fluffyExp: save.d[10],
-                        fluffyExp2: save.d[11],
-                        fluffyPrestige: save.d[12],
-                    }
-                }
+                user: save[0],
+                name: save[1],
+                highestLevelCleared: save[2],
+                highestRadonLevelCleared: save[3],
+                totalHeliumEarned: save[4],
+                totalPortals: save[5],
+                totalRadonEarned: save[6],
+                totalRadPortals: save[7],
+                version: save[8],
+                lastOnline: save[9],
+                spiresCompleted: save[10],
+                fluffyExp: save[11],
+                fluffyExp2: save[12],
+                fluffyPrestige: save[13],
+                totalBones: save[14],
+                spentBones: save[15],
+                steamBones: save[16]
             })
         }
     }

@@ -1,4 +1,4 @@
-/** @typedef {{r: string, d: [string, number, number, number, number, number, number, string, number, number, number, number, number]}[]} JSONSaves */
+/** @typedef {[string, string, number, number, number, number, number, number, string, number, number, number, number, number, number, number, number][]} JSONSaves */
 
 import fs from 'fs';
 import LZString from './lib/lz-string.js';
@@ -7,10 +7,9 @@ const { promises: { readdir, readFile, writeFile } } = fs;
 const SAVES_PATH = './saves'
 
 const saveDirs = await getDirectoryNames(SAVES_PATH);
+/** @type {JSONSaves} */
+const output = []
 for(const saveDir of saveDirs) {
-    /** @type {JSONSaves} */
-    const output = []
-
     console.info(`Processing saves from ${saveDir}`)
     const saveNames = await getFileNames(`${SAVES_PATH}/${saveDir}`);
     for(const saveName of saveNames) {
@@ -24,7 +23,8 @@ for(const saveDir of saveDirs) {
 
         try {
             const game = JSON.parse(decompressed);
-            output.push({r: save, d: [
+            output.push([
+                saveDir,
                 saveName,
                 /** @type {number} */(game.global.highestLevelCleared),
                 /** @type {number} */(game.global.highestRadonLevelCleared),
@@ -37,18 +37,21 @@ for(const saveDir of saveDirs) {
                 /** @type {number} */(game.global.spiresCompleted),
                 /** @type {number} */(game.global.fluffyExp),
                 /** @type {number} */(game.global.fluffyExp2),
-                /** @type {number} */(game.global.fluffyPrestige)
-            ]});
+                /** @type {number} */(game.global.fluffyPrestige),
+                getTotalBones(game, false),
+                getTotalBones(game, true),
+                /** @type {number} */(game.global.SB ?? 0),
+            ]);
         }
         catch(e) {
             console.error(`Failed to parse save ${saveName} from ${saveDir}`);
+            console.error(e);
             continue;
         }
     }
-
-    await writeFile(`./output/${saveDir}.json`, JSON.stringify(output));
 }
-console.info("All done")
+await writeFile(`./output/output.json`, JSON.stringify(output));
+console.info("All done");
 
 /**
  * @param {string} path 
@@ -64,4 +67,41 @@ async function getDirectoryNames(path) {
  */
 async function getFileNames(path) {
     return (await readdir(path, { withFileTypes: true })).filter(v => v.isFile()).map(v => v.name);
+}
+
+/**
+ * @param {any} game
+ * @param {boolean} spentOnly 
+ */
+function getTotalBones(game, spentOnly) {
+    let bones = 0;
+
+    if(typeof game?.unlocks?.imps === 'object') {
+        for(const bool of Object.values(game.unlocks.imps)) {
+            if(bool) bones += 50;
+        }
+    }
+
+    if(typeof game.permaBoneBonuses === 'object') {
+        for(const permBoost of Object.values(game.permaBoneBonuses)) {
+            bones += getBonesSpentFromPermaBoneLevel(permBoost.owned)
+        }
+    }
+
+    if(!spentOnly)
+        bones += game.global.b;
+
+    return bones;
+}
+
+/**
+ * 
+ * @param {number} lvl 
+ */
+function getBonesSpentFromPermaBoneLevel(lvl) {
+    let bones = 0;
+    for(let i = 1; i <= lvl; i++) {
+        bones += i * 10;
+    }
+    return bones;
 }
