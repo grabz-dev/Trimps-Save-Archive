@@ -1,5 +1,3 @@
-export const SAVE_NAMES = ['DrNye', 'Grabz', 'Neo', 'Quia', 'RMEfan', 'Snuthier']
-
 /** @typedef {{user: string, name: string, version: string, highestLevelCleared: number, highestRadonLevelCleared: number, totalHeliumEarned: number, totalRadonEarned: number, totalPortals: number, totalRadPortals: number, lastOnline: number, spiresCompleted: number, fluffyExp: number, fluffyExp2: number, fluffyPrestige: number, totalBones: number, spentBones: number, steamBones: number }} Save */
 /** @typedef {import("./jsonify_saves").JSONSaves} JSONSaves} */
 /** 
@@ -24,6 +22,8 @@ export const SAVE_NAMES = ['DrNye', 'Grabz', 'Neo', 'Quia', 'RMEfan', 'Snuthier'
 let elems;
 /** @type {Save[]} */
 let saves;
+/** @type {string[]} */
+let names;
 const config = {
     /** @type {{[name: string]: boolean}} */
     userFilter: {}
@@ -34,6 +34,10 @@ async function init() {
     elems = loadElements();
     /** @type {Save[]} */
     saves = await loadSaves();
+    /** @type {{[key: string]: true}} */
+    let _names = {}
+    for(let save of saves) _names[save.user] = true;
+    names = Object.keys(_names);
     if(typeof saves === 'string') {
         throw new Error(saves);
     }
@@ -61,7 +65,7 @@ function registerFilters() {
         /** @type {HTMLInputElement[]} */
         const checkboxes = []
 
-        SAVE_NAMES.forEach(name => {
+        names.forEach(name => {
             const label = document.createElement('label');
             const input = document.createElement('input');
             input.type = 'checkbox';
@@ -242,35 +246,33 @@ function refreshList() {
 async function loadSaves() {
     /** @type {Save[]} */
     const saveArr = [];
-    for(const name of SAVE_NAMES) {
-        /** @type {JSONSaves|null} */
-        const jsonArr = await (await (fetch(`output/output.json`))).json();
-        if(jsonArr == null) {
-            console.error(`Failed to fetch from ${name}.json`);
-            continue;
-        }
 
-        for(const save of jsonArr) {
-            saveArr.push({
-                user: save[0],
-                name: save[1],
-                highestLevelCleared: save[2],
-                highestRadonLevelCleared: save[3],
-                totalHeliumEarned: save[4],
-                totalPortals: save[5],
-                totalRadonEarned: save[6],
-                totalRadPortals: save[7],
-                version: save[8],
-                lastOnline: save[9],
-                spiresCompleted: save[10],
-                fluffyExp: save[11],
-                fluffyExp2: save[12],
-                fluffyPrestige: save[13],
-                totalBones: save[14],
-                spentBones: save[15],
-                steamBones: save[16]
-            })
-        }
+    /** @type {JSONSaves|null} */
+    const jsonArr = await (await (fetch(`output/output.json`))).json();
+    if(jsonArr == null) {
+        throw new Error(`Failed to fetch from output.json`);
+    }
+
+    for(const save of jsonArr) {
+        saveArr.push({
+            user: save[0],
+            name: save[1],
+            highestLevelCleared: save[2],
+            highestRadonLevelCleared: save[3],
+            totalHeliumEarned: save[4],
+            totalPortals: save[5],
+            totalRadonEarned: save[6],
+            totalRadPortals: save[7],
+            version: save[8],
+            lastOnline: save[9],
+            spiresCompleted: save[10],
+            fluffyExp: save[11],
+            fluffyExp2: save[12],
+            fluffyPrestige: save[13],
+            totalBones: save[14],
+            spentBones: save[15],
+            steamBones: save[16]
+        })
     }
 
     elems.loadingOverlay.parentElement?.removeChild(elems.loadingOverlay);
