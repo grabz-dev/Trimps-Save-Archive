@@ -14,6 +14,7 @@ To build these:
 # Contributions
 Thanks to
 * DrNye
+* GamingBlep
 * Neo
 * Quia
 * RMEfan
